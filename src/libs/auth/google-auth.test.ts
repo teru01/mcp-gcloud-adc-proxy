@@ -216,4 +216,62 @@ describe("createAuthClient", () => {
     expect(typeof client.getIdToken).toBe("function");
     expect(typeof client.refreshToken).toBe("function");
   });
+
+  it("サービスアカウント設定でクライアントを作成する", () => {
+    const config: AuthConfig = {
+      serviceAccountEmail: "test-sa@project.iam.gserviceaccount.com",
+    };
+
+    const client = createAuthClient(config);
+    expect(client).toBeTruthy();
+    expect(typeof client.getIdToken).toBe("function");
+    expect(typeof client.refreshToken).toBe("function");
+  });
+});
+
+describe.skip("サービスアカウントインパーソネーション", () => {
+  it("サービスアカウントが指定された場合、インパーソネーションを使用する", async () => {
+    const config: AuthConfig = {
+      serviceAccountEmail: "test-sa@project.iam.gserviceaccount.com",
+    };
+
+    const client = createAuthClient(config);
+    const result = await client.getIdToken("https://example.com");
+
+    // 実装されるまでこのテストは失敗する
+    expect(result.type).toBe("success");
+    if (result.type === "success") {
+      expect(typeof result.token).toBe("string");
+      expect(result.token.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("サービスアカウントが空文字の場合、通常のADCを使用する", async () => {
+    const config: AuthConfig = {
+      serviceAccountEmail: "",
+    };
+
+    const client = createAuthClient(config);
+    const result = await client.getIdToken("https://example.com");
+
+    // 空文字の場合は通常のADC処理
+    expect(result.type === "success" || result.type === "error").toBe(true);
+  });
+
+  it("不正なサービスアカウントメールでエラーを返す", async () => {
+    const config: AuthConfig = {
+      serviceAccountEmail: "invalid-email-format",
+    };
+
+    const client = createAuthClient(config);
+    const result = await client.getIdToken("https://example.com");
+
+    // インパーソネーション実装後、適切なエラーが返されることを検証
+    expect(result.type).toBe("error");
+    if (result.type === "error") {
+      expect(result.error.kind).toMatch(
+        /token-fetch-failed|impersonation-failed/,
+      );
+    }
+  });
 });

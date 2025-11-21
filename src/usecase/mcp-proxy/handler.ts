@@ -37,7 +37,9 @@ const handleRequest = async (
       logger.debug({ sessionId }, "リクエストにセッションIDを追加");
     }
 
-    const tokenResult = await config.authClient.getIdToken(config.targetUrl);
+    // オーディエンス: 明示的に指定されていればそれを使用、なければターゲットURLを使用
+    const audience = config.audiences || config.targetUrl;
+    const tokenResult = await config.authClient.getIdToken(audience);
 
     if (tokenResult.type === "error") {
       logger.warn(
@@ -145,7 +147,9 @@ const handleMessage = async (
         logger.debug({ sessionId }, "通知にセッションIDを追加");
       }
 
-      const tokenResult = await config.authClient.getIdToken(config.targetUrl);
+      // オーディエンス: 明示的に指定されていればそれを使用、なければターゲットURLを使用
+      const audience = config.audiences || config.targetUrl;
+      const tokenResult = await config.authClient.getIdToken(audience);
 
       if (tokenResult.type === "error") {
         logger.warn(

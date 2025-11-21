@@ -11,7 +11,8 @@ type AuthError =
   | { kind: "no-credentials"; message: string }
   | { kind: "invalid-audience"; message: string }
   | { kind: "token-fetch-failed"; message: string }
-  | { kind: "invalid-token"; message: string };
+  | { kind: "invalid-token"; message: string }
+  | { kind: "impersonation-failed"; message: string };
 
 export type TokenCache = {
   [audience: string]: {
@@ -23,4 +24,6 @@ export type TokenCache = {
 export type AuthConfig = {
   credentialsPath?: string;
   projectId?: string;
+  serviceAccountEmail?: string;
+  includeEmail?: boolean;
 };

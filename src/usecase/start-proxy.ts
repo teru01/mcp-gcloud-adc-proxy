@@ -45,7 +45,14 @@ export async function startProxy(
   try {
     // 認証クライアントの初期化
     logger.debug("Initializing auth client");
-    const authClient = createAuthClient({});
+    const authClient = createAuthClient({
+      ...(options.impersonateServiceAccount && {
+        serviceAccountEmail: options.impersonateServiceAccount,
+      }),
+      ...(options.includeEmail !== undefined && {
+        includeEmail: options.includeEmail,
+      }),
+    });
 
     // HTTPクライアントの初期化
     logger.debug("Initializing HTTP client");
@@ -55,15 +62,19 @@ export async function startProxy(
     logger.debug("Initializing session manager");
     const sessionManager = createSessionManager();
 
-    // プロキシハンドラーの作成
-    logger.debug("Creating MCP proxy handler");
-    const proxy = createMcpProxy({
+    // プロキシ設定の作成
+    const proxyConfig = {
       targetUrl: options.url,
       timeout: options.timeout,
       authClient,
       httpClient,
       sessionManager,
-    });
+      ...(options.audiences && { audiences: options.audiences }),
+    };
+
+    // プロキシハンドラーの作成
+    logger.debug("Creating MCP proxy handler");
+    const proxy = createMcpProxy(proxyConfig);
 
     // MCPサーバーのセットアップと接続
     logger.info("Setting up MCP server");

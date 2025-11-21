@@ -23,9 +23,13 @@ export type ProxyConfig = {
   authClient: AuthClient;
   httpClient: HttpClient;
   sessionManager: SessionManager;
+  audiences?: string;
 };
 
 export type ProxyOptions = {
   url: string;
   timeout: number;
+  impersonateServiceAccount?: string;
+  audiences?: string;
+  includeEmail?: boolean;
 };

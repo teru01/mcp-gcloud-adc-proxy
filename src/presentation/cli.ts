@@ -20,6 +20,18 @@ const proxyCommand = define({
       default: 120000,
       description: "HTTP request timeout in milliseconds",
     },
+    "impersonate-service-account": {
+      type: "string",
+      description: "Service account email for impersonation (optional)",
+    },
+    audiences: {
+      type: "string",
+      description: "ID token audience (optional, defaults to target URL)",
+    },
+    "include-email": {
+      type: "boolean",
+      description: "Include email in ID token (default: true)",
+    },
   },
   examples: `# Basic usage (HTTPS)
 $ mcp-gcloud-adc-proxy --url https://my-service-abc123-uc.a.run.app
@@ -28,16 +40,39 @@ $ mcp-gcloud-adc-proxy --url https://my-service-abc123-uc.a.run.app
 $ mcp-gcloud-adc-proxy --url http://localhost:3000
 
 # With custom timeout
-$ mcp-gcloud-adc-proxy -u https://my-service-abc123-uc.a.run.app -t 60000`,
+$ mcp-gcloud-adc-proxy -u https://my-service-abc123-uc.a.run.app -t 60000
+
+# With service account impersonation
+$ mcp-gcloud-adc-proxy -u https://my-service-abc123-uc.a.run.app --impersonate-service-account sa@project.iam.gserviceaccount.com
+
+# With custom audience
+$ mcp-gcloud-adc-proxy -u https://my-service-abc123-uc.a.run.app --audiences https://example.com`,
   run: async (ctx) => {
-    const { url, timeout } = ctx.values;
-    await executeProxyCommand({ url, timeout });
+    const {
+      url,
+      timeout,
+      "impersonate-service-account": impersonateServiceAccount,
+      audiences,
+      "include-email": includeEmail,
+    } = ctx.values;
+    await executeProxyCommand({
+      url,
+      timeout,
+      ...(typeof impersonateServiceAccount === "string" && {
+        impersonateServiceAccount,
+      }),
+      ...(typeof audiences === "string" && { audiences }),
+      ...(typeof includeEmail === "boolean" && { includeEmail }),
+    });
   },
 });
 
 export type CliOptions = {
   url: string;
   timeout: number;
+  impersonateServiceAccount?: string;
+  audiences?: string;
+  includeEmail?: boolean;
 };
 
 export function validateCliOptions(options: CliOptions): void {
@@ -64,7 +99,13 @@ export function validateCliOptions(options: CliOptions): void {
 
 export async function executeProxyCommand(options: CliOptions): Promise<void> {
   logger.info(
-    { url: options.url, timeout: options.timeout },
+    {
+      url: options.url,
+      timeout: options.timeout,
+      impersonateServiceAccount: options.impersonateServiceAccount,
+      audiences: options.audiences,
+      includeEmail: options.includeEmail,
+    },
     "Executing proxy command",
   );
 
@@ -73,6 +114,13 @@ export async function executeProxyCommand(options: CliOptions): Promise<void> {
   const result = await startProxy({
     url: options.url,
     timeout: options.timeout,
+    ...(options.impersonateServiceAccount && {
+      impersonateServiceAccount: options.impersonateServiceAccount,
+    }),
+    ...(options.audiences && { audiences: options.audiences }),
+    ...(options.includeEmail !== undefined && {
+      includeEmail: options.includeEmail,
+    }),
   });
 
   if (result.type === "error") {

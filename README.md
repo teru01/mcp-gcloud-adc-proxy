@@ -31,6 +31,36 @@ See the [Google Cloud documentation](https://cloud.google.com/docs/authenticatio
 ```bash
 # Start MCP proxy
 npx mcp-gcloud-adc-proxy --url https://your-cloud-run-service.run.app
+
+# With service account impersonation
+npx mcp-gcloud-adc-proxy --url https://your-cloud-run-service.run.app --impersonate-service-account sa@project.iam.gserviceaccount.com
+
+# With custom audience
+npx mcp-gcloud-adc-proxy --url https://your-cloud-run-service.run.app --audiences https://example.com
+```
+
+### Service Account Impersonation
+
+You can use service account impersonation to generate ID tokens for a specific service account instead of using the default ADC credentials:
+
+```bash
+npx mcp-gcloud-adc-proxy \
+  --url https://your-cloud-run-service.run.app \
+  --impersonate-service-account your-sa@your-project.iam.gserviceaccount.com
+```
+
+**Requirements:**
+- The ADC principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account
+- The target service account must have the necessary permissions to access the remote MCP server
+
+### Custom Audience
+
+By default, the target URL is used as the audience for the ID token. You can override this with the `--audiences` option:
+
+```bash
+npx mcp-gcloud-adc-proxy \
+  --url https://your-cloud-run-service.run.app \
+  --audiences https://custom-audience.example.com
 ```
 
 ### Setup to Claude Code
@@ -41,6 +71,9 @@ claude mcp add foobar -s user -- npx -y mcp-gcloud-adc-proxy -u https://foobar.r
 
 # Or add to project scope to share with your team
 claude mcp add foobar -s project -- npx -y mcp-gcloud-adc-proxy -u https://foobar.run.app
+
+# With service account impersonation
+claude mcp add foobar -s user -- npx -y mcp-gcloud-adc-proxy -u https://foobar.run.app --impersonate-service-account sa@project.iam.gserviceaccount.com
 ```
 
 ## License

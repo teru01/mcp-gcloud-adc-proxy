@@ -29,6 +29,36 @@ export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
 ```bash
 # MCPプロキシを起動
 npx mcp-gcloud-adc-proxy --url https://your-cloud-run-service.run.app
+
+# サービスアカウントインパーソネーションを使用
+npx mcp-gcloud-adc-proxy --url https://your-cloud-run-service.run.app --impersonate-service-account sa@project.iam.gserviceaccount.com
+
+# カスタムオーディエンスを指定
+npx mcp-gcloud-adc-proxy --url https://your-cloud-run-service.run.app --audiences https://example.com
+```
+
+### サービスアカウントインパーソネーション
+
+デフォルトのADCクレデンシャルの代わりに、特定のサービスアカウントのIDトークンを生成するために、サービスアカウントインパーソネーションを使用できます：
+
+```bash
+npx mcp-gcloud-adc-proxy \
+  --url https://your-cloud-run-service.run.app \
+  --impersonate-service-account your-sa@your-project.iam.gserviceaccount.com
+```
+
+**要件:**
+- ADCプリンシパルは、対象のサービスアカウントに対して `roles/iam.serviceAccountTokenCreator` ロールを持っている必要があります
+- 対象のサービスアカウントは、リモートMCPサーバーにアクセスするための必要な権限を持っている必要があります
+
+### カスタムオーディエンス
+
+デフォルトでは、ターゲットURLがIDトークンのオーディエンスとして使用されます。`--audiences` オプションでこれを上書きできます：
+
+```bash
+npx mcp-gcloud-adc-proxy \
+  --url https://your-cloud-run-service.run.app \
+  --audiences https://custom-audience.example.com
 ```
 
 ### Claude Codeへの設定
@@ -39,6 +69,9 @@ claude mcp add foobar -s user -- npx -y mcp-gcloud-adc-proxy -u https://foobar.r
 
 # またはプロジェクトスコープに追加してチームと共有
 claude mcp add foobar -s project -- npx -y mcp-gcloud-adc-proxy -u https://foobar.run.app
+
+# サービスアカウントインパーソネーションを使用
+claude mcp add foobar -s user -- npx -y mcp-gcloud-adc-proxy -u https://foobar.run.app --impersonate-service-account sa@project.iam.gserviceaccount.com
 ```
 
 ## ライセンス
