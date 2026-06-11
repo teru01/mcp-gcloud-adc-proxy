@@ -52,6 +52,8 @@ export async function startProxy(
       ...(options.includeEmail !== undefined && {
         includeEmail: options.includeEmail,
       }),
+      // インパーソネーション時は元ユーザーのIDトークンを上流へ送出する。
+      emitImpersonatorToken: Boolean(options.impersonateServiceAccount),
     });
 
     // HTTPクライアントの初期化
